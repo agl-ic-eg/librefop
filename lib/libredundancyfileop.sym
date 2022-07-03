@@ -1,0 +1,5 @@
+refop_create_redundancy_handle
+refop_release_redundancy_handle
+refop_set_redundancy_data
+refop_get_redundancy_data
+refop_remove_redundancy_data
