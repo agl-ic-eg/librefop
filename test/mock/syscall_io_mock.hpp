@@ -7,6 +7,11 @@
 #include <sys/stat.h>
 
 /*
+int open(const char *pathname, int flags);
+int open(const char *pathname, int flags, mode_t mode);
+*/
+static std::function<int(const char *pathname, int flags)> _open;
+/*
 ssize_t read(int fd, void *buf, size_t count);
 ssize_t write(int fd, const void *buf, size_t count);
 int close(int fd);
@@ -14,6 +19,11 @@ int close(int fd);
 static std::function<ssize_t(int fd, void *buf, size_t count)> _read;
 static std::function<ssize_t(int fd, const void *buf, size_t count)> _write;
 static std::function<int(int)> _close;
+
+/*
+int fsync(int fd);
+*/
+static std::function<int(int)> _fsync;
 
 /*
 int unlink(const char *pathname);
@@ -39,6 +49,10 @@ static std::function<int(int sockfd, struct sockaddr *addr,
 class SyscallIOMocker {
 public:
 	SyscallIOMocker() {
+		_open = [this](const char *pathname, int flags) {
+			return open(pathname, flags);
+		};
+
 		_read = [this](int fd, void *buf, size_t count) {
 			return read(fd, buf, count);
 		};
@@ -47,6 +61,10 @@ public:
 		};
 		_close = [this](int fd){
 			return close(fd);
+		};
+
+		_fsync = [this](int fd){
+			return fsync(fd);
 		};
 
 		_unlink = [this](const char *pathname){
@@ -72,9 +90,13 @@ public:
 	}
 
 	~SyscallIOMocker() {
+		_open = {};
+
 		_read = {};
 		_write = {};
 		_close = {};
+
+		_fsync = {};
 
 		_unlink = {};
 		_stat = {};
@@ -85,9 +107,13 @@ public:
 		_accept4 = {};
 	}
 
+	MOCK_CONST_METHOD2(open, int(const char *pathname, int flags));
+
 	MOCK_CONST_METHOD3(read, ssize_t(int fd, void *buf, size_t count));
 	MOCK_CONST_METHOD3(write, ssize_t(int fd, const void *buf, size_t count));
 	MOCK_CONST_METHOD1(close, int(int));
+
+	MOCK_CONST_METHOD1(fsync, int(int));
 
 	MOCK_CONST_METHOD1(unlink, int(const char *));
 	MOCK_CONST_METHOD2(stat, int(const char *pathname, struct stat *buf));
@@ -106,47 +132,57 @@ protected:
 #ifdef __cplusplus
 extern "C" {
 #endif
-ssize_t read(int fd, void *buf, size_t count)
+static int open(const char *pathname, int flags, ...)
+{
+	return _open(pathname, flags);
+}
+
+static ssize_t read(int fd, void *buf, size_t count)
 {
     return _read(fd, buf, count);
 }
 
-ssize_t write(int fd, const void *buf, size_t count)
+static ssize_t write(int fd, const void *buf, size_t count)
 {
     return _write(fd, buf, count);
 }
 
-int close(int fd)
+static int close(int fd)
 {
     return _close(fd);
 }
 
-int unlink(const char *pathname)
+static  int fsync(int fd)
+{
+	return _fsync(fd);
+}
+
+static int unlink(const char *pathname)
 {
 	return _unlink(pathname);
 }
 
-int stat(const char *pathname, struct stat *buf)
+static int stat(const char *pathname, struct stat *buf)
 {
 	return _stat(pathname, buf);
 }
 
-int socket(int socket_family, int socket_type, int protocol)
+static int socket(int socket_family, int socket_type, int protocol)
 {
 	return _socket(socket_family, socket_type, protocol);
 }
 
-int bind(int sockfd, const struct sockaddr *addr,socklen_t addrlen)
+static int bind(int sockfd, const struct sockaddr *addr,socklen_t addrlen)
 {
 	return _bind(sockfd, addr, addrlen);
 }
 
-int listen(int sockfd, int backlog)
+static int listen(int sockfd, int backlog)
 {
 	return _listen(sockfd, backlog);
 }
 
-int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
+static int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
 {
 	return _accept4(sockfd, addr, addrlen, flags);
 }
