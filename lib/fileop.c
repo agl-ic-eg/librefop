@@ -74,9 +74,8 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 		return -1;
 	}
 
-	wsize = safe_write(fd, pbuf, bufsize + sizeof(s_refop_file_header));	
+	wsize = safe_write(fd, pbuf, bufsize + sizeof(s_refop_file_header));
 	if (wsize < 0) {
-		// All open error couldnt recover.
 		(void)close(fd);
 		free(pbuf);
 		return -1;
@@ -110,7 +109,7 @@ int refop_file_rotation(refop_handle_t handle)
 	latest_state = refop_file_test(hndl->latestfile);
 	backup_state = refop_file_test(hndl->backupfile1);
 
-	if (latest_state == -2 || backup_state == -2)
+	if (latest_state <= -2 || backup_state <= -2)
 		return -1;
 
 	// Operation algorithm
@@ -170,7 +169,7 @@ int refop_file_rotation(refop_handle_t handle)
  * @retval 1 Succeeded with recover.
  * @retval -1 Abnormal fail. Shall not continue.
  * @retval -2 No data.
- * @retval -3 Broaken data.
+ * @retval -3 Broken data.
  */
 int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int64_t *readsize)
 {
@@ -185,7 +184,7 @@ int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int
 		(*readsize) = ressize;
 		return 0;
 	} else if (ret1 < -1) {
-		// latest file was broaken, file remove
+		// latest file was broken, file remove
 		(void)unlink(hndl->latestfile);
 	}
 
@@ -195,7 +194,7 @@ int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int
 		(*readsize) = ressize;
 		return 1;
 	} else if (ret2 < -1) {
-		// latest file was broaken, file remove
+		// backup file was broken, file remove
 		(void)unlink(hndl->latestfile);
 	}
 
@@ -258,9 +257,11 @@ int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufs
 	fd = open(file, (O_CLOEXEC | O_RDONLY | O_NOFOLLOW));
 	if (fd < 0) {
 		if (errno == ENOENT)
-			return -1;
+			ret = -1;
 		else 
-			return -6;
+			ret = -6;
+
+		goto invalid;
 	}
 	
 	size = safe_read(fd, &head, sizeof(head));
@@ -314,7 +315,7 @@ int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufs
 invalid:
 	free(pmalloc);	//free is NULL safe
 	
-	if (fd != -1)
+	if (fd >= 0)
 		(void)close(fd);
 
 	return ret;
