@@ -4,7 +4,7 @@
  * @file	libredundancyfileop.c
  * @brief	The redundancy file operation library
  */
-#include "libredundancyfileop.h"
+#include "librefop.h"
 #include "fileop.h"
 
 #include <sys/types.h>

@@ -1,10 +1,8 @@
 AC_PREREQ([2.69])
 
-AC_INIT([exsample], [1.0])
+AC_INIT([librefop], [1.0])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
-
-#AC_CONFIG_SRCDIR([src/exsample.cpp])
 
 AC_CONFIG_HEADERS([include/config.h])
 
@@ -28,13 +26,6 @@ AC_ARG_ENABLE([test],
   [:],
   [enable_test=no])
 AM_CONDITIONAL([ENABLE_TEST], [test "$enable_test" = "yes"])
-
-
-AC_ARG_ENABLE([printfdebug],
-  [AS_HELP_STRING([--enable-printfdebug], [Enable user printf debug (default is no)])],
-  [:],
-  [enable_printfdebug=no])
-AM_CONDITIONAL([ENABLE_PRINTFDEBUG], [test "$enable_printfdebug" = "yes"])
 
 # Checks for programs.
 AC_PROG_CC
@@ -60,7 +51,7 @@ PKG_CHECK_MODULES([GMOCK_MAIN], [gmock_main], , enable_test=no)
 
 AC_CONFIG_FILES([
 	Makefile
-	libredundancyfileop.pc
+	librefop.pc
 	lib/Makefile
 	test/Makefile
 	])

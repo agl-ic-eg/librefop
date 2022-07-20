@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libredundancyfileop
+Name: librefop
 Description: Redundancy file operation library
-Requires: 
+Requires:
 Version: 1.0
-Libs: -L${libdir} -lexsample
+Libs: -L${libdir} -lrefop
 Cflags: -I${includedir}

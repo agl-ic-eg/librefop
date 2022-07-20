@@ -5,8 +5,8 @@ SUBDIRS += test
 endif
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libredundancyfileop.pc
+pkgconfig_DATA = librefop.pc
 
-CLEANFILES = libredundancyfileop.pc
+CLEANFILES = librefop.pc
 
 

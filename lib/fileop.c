@@ -4,7 +4,7 @@
  * @file	fileop.c
  * @brief	file operation functions
  */
-#include "libredundancyfileop.h"
+#include "librefop.h"
 #include "fileop.h"
 #include "file-util.h"
 #include "static-configurator.h"

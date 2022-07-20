@@ -1,7 +1,7 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * @file	libredundancyfileop.h
+ * @file	librefop.h
  * @brief	Interface header for the redundancy file operation library
  */
 #ifndef LIBREDUNDANCY_FILEOP_H

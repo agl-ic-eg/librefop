@@ -1,21 +1,21 @@
 AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
-lib_LTLIBRARIES = libredundancyfileop.la
+lib_LTLIBRARIES = librefop.la
 
-libredundancyfileop_la_SOURCES = \
+librefop_la_SOURCES = \
 	fileop.c file-util.c \
 	static-configurator.c \
 	libredundancyfileop.c 
 
-libredundancyfileop_la_LBSADD = 
+librefop_la_LBSADD = 
 
-libredundancyfileop_la_CFLAGS = \
+librefop_la_CFLAGS = \
 	-g \
 	-I$(top_srcdir)/include \
 	-D_GNU_SOURCE 
 
-libredundancyfileop_la_LDFLAGS = \
+librefop_la_LDFLAGS = \
 	-export-symbols libredundancyfileop.sym -version-info 0:0:0
 
 # configure option 
