@@ -21,6 +21,9 @@ struct fileop_test_unit_test : Test, SyscallIOMockBase {};
 ssize_t g_safe_read_ret = 0;
 ssize_t safe_read(int fd, void *buf, size_t count)
 {
+	if (g_safe_read_ret == sizeof(s_refop_file_header)) {
+		refop_header_create((s_refop_file_header*)buf, 100, refop_get_config_data_size_limit()+1);
+	}
 	return g_safe_read_ret;
 }
 
@@ -118,139 +121,223 @@ TEST_F(fileop_test_unit_test, unit_test_refop_new_file_write__safe_write_error)
 	free(dmybuf);
 	free(handle);
 }
-#if 0
 //--------------------------------------------------------------------------------------------------------
-TEST_F(interface_test, interface_test_refop_create_redundancy_handle__stat_error)
+TEST_F(fileop_test_unit_test, unit_test_refop_file_rotation__stat_error)
 {
-	refop_error_t ret = REFOP_SUCCESS;
-	refop_handle_t handle = NULL;
+	int ret = -1;
+	refop_handle_t handle = (refop_handle_t)calloc(1,sizeof(struct refop_halndle));
+
+	//dummy
+	g_safe_read_ret = 0;
+	g_safe_write_ret = 0;
+	g_safe_write_ret = 0;
 	
-	//dummy data
-	char directry[] = "/tmp";
-	char file[] = "test.bin";
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(EACCES, -1))
+		.WillOnce(SetErrnoAndReturn(EACCES, -1));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(-1, ret);
 
-	/* stat error case
-		EACCES
-		EFAULT
-		ELOOP
-		ENAMETOOLONG
-		ENOENT
-		ENOMEM
-		ENOTDIR
-		EOVERFLOW
-	*/
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1))
+		.WillOnce(SetErrnoAndReturn(EACCES, -1));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(-1, ret);
 
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(EACCES, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_NOENT, ret);
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(EACCES, -1))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(-1, ret);
 
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(EFAULT, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_SYSERROR, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(ELOOP, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_NOENT, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(ENAMETOOLONG, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_ARGERROR, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(ENOENT, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_NOENT, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(ENOMEM, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_SYSERROR, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(ENOTDIR, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_NOENT, ret);
-
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(SetErrnoAndReturn(EOVERFLOW, -1));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_SYSERROR, ret);
-}
-//--------------------------------------------------------------------------------------------------------
-TEST_F(interface_test, interface_test_refop_create_redundancy_handle__pathcheck_error)
-{
-	refop_error_t ret = REFOP_SUCCESS;
-	refop_handle_t handle = NULL;
-	
-	//dummy data
-	char directry[PATH_MAX];
-	char file[PATH_MAX];
-
-	memset(directry,0,sizeof(directry));
-	memset(file,0,sizeof(file));
-
-	//short directry string
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(Return(0));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_ARGERROR, ret);
-
-	//short file string
-	strncpy(directry,"/tmp",PATH_MAX);
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(Return(0));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_ARGERROR, ret);
-
-	// too long path
-	for(int i=1;i < (PATH_MAX-1);i++)
-		directry[i] = 'd';
-	strncpy(file,"test.bin",PATH_MAX);
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(Return(0));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_ARGERROR, ret);
-}
-//--------------------------------------------------------------------------------------------------------
-TEST_F(interface_test, interface_test_refop_create_redundancy_handle__success)
-{
-	struct refop_halndle *hndl;
-	refop_error_t ret = REFOP_SUCCESS;
-	refop_handle_t handle = NULL;
-	
-	//dummy data
-	char directry[] = "/tmp";
-	char directry2[] = "/tmp/";
-	char file[] = "test.bin";
-	char resultstr[] = "/tmp/test.bin";
-	char resultstr_bk1[] = "/tmp/test.bin.bk1";
-	char resultstr_new[] = "/tmp/test.bin.tmp";
-
-	//short directry string
-	EXPECT_CALL(sysiom, stat(directry, _)).WillOnce(Return(0));
-	ret = refop_create_redundancy_handle(&handle, directry, file);
-	ASSERT_EQ(REFOP_SUCCESS, ret);
-	//data check
-	hndl = (struct refop_halndle *)handle;
-	ASSERT_EQ(0, strcmp(hndl->latestfile,resultstr));
-	ASSERT_EQ(0, strcmp(hndl->backupfile1,resultstr_bk1));
-	ASSERT_EQ(0, strcmp(hndl->newfile,resultstr_new));
-	ASSERT_EQ(0, strcmp(hndl->basedir,directry2));
-	free(handle);
-
-	//short file string
-	EXPECT_CALL(sysiom, stat(directry2, _)).WillOnce(Return(0));
-	ret = refop_create_redundancy_handle(&handle, directry2, file);
-	ASSERT_EQ(REFOP_SUCCESS, ret);
-	//data check
-	hndl = (struct refop_halndle *)handle;
-	ASSERT_EQ(0, strcmp(hndl->latestfile,resultstr));
-	ASSERT_EQ(0, strcmp(hndl->backupfile1,resultstr_bk1));
-	ASSERT_EQ(0, strcmp(hndl->newfile,resultstr_new));
-	ASSERT_EQ(0, strcmp(hndl->basedir,directry2));
 	free(handle);
 }
 //--------------------------------------------------------------------------------------------------------
-#endif
-/*TEST_F(data_pool_test_others, test_data_pool_test_data_pool_unlock__false)
+TEST_F(fileop_test_unit_test, unit_test_refop_file_rotation__open_error)
 {
-	bool ret = true;
+	int ret = -1;
+	refop_handle_t handle = (refop_handle_t)calloc(1,sizeof(struct refop_halndle));
 
-	EXPECT_CALL(lpm, pthread_mutex_unlock(_))
-			.WillOnce(Return(-1));
-	ret = data_pool_unlock();
-	ASSERT_EQ(false, ret);
-}*/
+	//dummy
+	g_safe_read_ret = 0;
+	g_safe_write_ret = 0;
+	g_safe_write_ret = 0;
+
+	// use a4 mode
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1));
+	EXPECT_CALL(sysiom, rename(_, _))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, open(_, _))
+		.WillOnce(Return(-1));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(0, ret);
+
+	free(handle);
+}
+//--------------------------------------------------------------------------------------------------------
+TEST_F(fileop_test_unit_test, unit_test_refop_file_rotation__a1_a2_a3_a4)
+{
+	int ret = -1;
+	refop_handle_t handle = (refop_handle_t)calloc(1,sizeof(struct refop_halndle));
+
+	//dummy
+	g_safe_read_ret = 0;
+	g_safe_write_ret = 0;
+	g_safe_write_ret = 0;
+	strncpy(handle->backupfile1,"backup1",sizeof(handle->backupfile1));
+	strncpy(handle->latestfile,"latestfile",sizeof(handle->backupfile1));
+	strncpy(handle->newfile,"newfile",sizeof(handle->backupfile1));
+
+	// a1 mode
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(Return(0))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, unlink(handle->backupfile1))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->latestfile, handle->backupfile1))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->newfile, handle->latestfile))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	EXPECT_CALL(sysiom, fsync(100)).WillOnce(Return(0));
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(0, ret);
+
+	// a2 mode
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(Return(0))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1));
+	//EXPECT_CALL(sysiom, unlink(handle->backupfile1))
+	//	.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->latestfile, handle->backupfile1))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->newfile, handle->latestfile))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	EXPECT_CALL(sysiom, fsync(100)).WillOnce(Return(0));
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(0, ret);
+
+	// a3 mode
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1))
+		.WillOnce(Return(0));
+	//EXPECT_CALL(sysiom, unlink(handle->backupfile1))
+	//	.WillOnce(Return(0));
+	//EXPECT_CALL(sysiom, rename(handle->latestfile, handle->backupfile1))
+	//	.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->newfile, handle->latestfile))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	EXPECT_CALL(sysiom, fsync(100)).WillOnce(Return(0));
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(0, ret);
+
+	// a4 mode
+	EXPECT_CALL(sysiom, stat(_, _))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1))
+		.WillOnce(SetErrnoAndReturn(ENOENT, -1));
+	//EXPECT_CALL(sysiom, unlink(handle->backupfile1))
+	//	.WillOnce(Return(0));
+	//EXPECT_CALL(sysiom, rename(handle->latestfile, handle->backupfile1))
+	//	.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, rename(handle->newfile, handle->latestfile))
+		.WillOnce(Return(0));
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	EXPECT_CALL(sysiom, fsync(100)).WillOnce(Return(0));
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+	ret = refop_file_rotation(handle);
+	ASSERT_EQ(0, ret);
+
+	free(handle);
+}
+//--------------------------------------------------------------------------------------------------------
+TEST_F(fileop_test_unit_test, fileop_test_unit_test_refop_file_get_with_validation__1st_open_error)
+{
+	int ret = -1;
+	
+	//dummy data
+	char testfilename[] = "/tmp/test.bin";
+	uint8_t *pbuf = NULL;
+	int64_t sz = 256 * 1024;
+	int64_t szr = 0;
+
+	pbuf = (uint8_t*)malloc(sz);
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(SetErrnoAndReturn(EACCES, -1));
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-6, ret);
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(SetErrnoAndReturn(ENOMEM, -1));
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-6, ret);
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(SetErrnoAndReturn(ENOENT, -1));
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-1, ret);
+
+	free(pbuf);
+}
+//--------------------------------------------------------------------------------------------------------
+TEST_F(fileop_test_unit_test, fileop_test_unit_test_refop_file_get_with_validation__safe_read_error)
+{
+	int ret = -1;
+	
+	//dummy data
+	char testfilename[] = "/tmp/test.bin";
+	uint8_t *pbuf = NULL;
+	int64_t sz = 256 * 1024;
+	int64_t szr = 0;
+
+	pbuf = (uint8_t*)malloc(sz);
+
+	g_safe_read_ret = 0;
+	g_safe_write_ret = 0;
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	g_safe_read_ret = sizeof(s_refop_file_header)*2;
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+	
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-2, ret);
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(200));
+	g_safe_read_ret = sizeof(s_refop_file_header)/2;
+	EXPECT_CALL(sysiom, close(200)).WillOnce(Return(0));
+
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-2, ret);
+
+	free(pbuf);
+}
+//--------------------------------------------------------------------------------------------------------
+TEST_F(fileop_test_unit_test, fileop_test_unit_test_refop_file_get_with_validation__header_error)
+{
+	int ret = -1;
+	
+	//dummy data
+	char testfilename[] = "/tmp/test.bin";
+	uint8_t *pbuf = NULL;
+	int64_t sz = 256 * 1024;
+	int64_t szr = 0;
+
+	pbuf = (uint8_t*)malloc(sz);
+
+	g_safe_read_ret = 0;
+	g_safe_write_ret = 0;
+
+	EXPECT_CALL(sysiom, open(_,_)).WillOnce(Return(100));
+	g_safe_read_ret = sizeof(s_refop_file_header);
+	EXPECT_CALL(sysiom, close(100)).WillOnce(Return(0));
+
+	ret = refop_file_get_with_validation(testfilename, pbuf, sz, &szr);
+	ASSERT_EQ(-4, ret);
+
+	free(pbuf);
+}
+

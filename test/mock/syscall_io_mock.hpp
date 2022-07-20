@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 
 /*
 int open(const char *pathname, int flags);
@@ -28,10 +29,11 @@ static std::function<int(int)> _fsync;
 /*
 int unlink(const char *pathname);
 int stat(const char *pathname, struct stat *buf);
+int rename(const char *oldpath, const char *newpath);
 */
 static std::function<int(const char *)> _unlink;
 static std::function<int(const char *pathname, struct stat *buf)> _stat;
-
+static std::function<int(const char *oldpath, const char *newpath)> _rename;
 
 /*
 int socket(int socket_family, int socket_type, int protocol);
@@ -73,6 +75,9 @@ public:
 		_stat = [this](const char *pathname, struct stat *buf) {
 			return stat(pathname, buf);
 		};
+		_rename = [this](const char *oldpath, const char *newpath){
+			return rename(oldpath, newpath);
+		};
 
 		_socket = [this](int socket_family, int socket_type, int protocol){
 			return socket(socket_family, socket_type, protocol);
@@ -100,6 +105,7 @@ public:
 
 		_unlink = {};
 		_stat = {};
+		_rename = {};
 
 		_socket = {};
 		_bind = {};
@@ -117,6 +123,7 @@ public:
 
 	MOCK_CONST_METHOD1(unlink, int(const char *));
 	MOCK_CONST_METHOD2(stat, int(const char *pathname, struct stat *buf));
+	MOCK_CONST_METHOD2(rename, int(const char *oldpath, const char *newpath));
 
 	MOCK_CONST_METHOD3(socket, int(int socket_family, int socket_type, int protocol));
 	MOCK_CONST_METHOD3(bind, int(int sockfd, const struct sockaddr *addr,socklen_t addrlen));
@@ -165,6 +172,11 @@ static int unlink(const char *pathname)
 static int stat(const char *pathname, struct stat *buf)
 {
 	return _stat(pathname, buf);
+}
+
+static int rename(const char *oldpath, const char *newpath)
+{
+	return _rename(oldpath, newpath);
 }
 
 static int socket(int socket_family, int socket_type, int protocol)

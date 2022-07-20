@@ -1,8 +1,8 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * @file	data-pool-service-test.c
- * @brief	Unit test fot data-pool-service-test.c
+ * @file	interface_test_unit.cpp
+ * @brief	Unit test fot libredundancyfileop.c
  */
 #include <gtest/gtest.h>
 #include "mock/syscall_io_mock.hpp"
