@@ -4,13 +4,13 @@
  * @file	libredundancyfileop.c
  * @brief	The redundancy file operation library
  */
-#include "librefop.h"
 #include "fileop.h"
+#include "librefop.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +42,7 @@ refop_error_t refop_create_redundancy_handle(refop_handle_t *handle, const char 
 	if ((handle == NULL) || (directry == NULL) || (filename == NULL))
 		return REFOP_ARGERROR;
 
-	//Check a directry
+	// Check a directry
 	ret = stat(directry, &sb);
 	if (ret < 0) {
 		if ((errno == EACCES) || (errno == ELOOP) || (errno == ENOENT) || (errno == ENOTDIR))
@@ -53,35 +53,36 @@ refop_error_t refop_create_redundancy_handle(refop_handle_t *handle, const char 
 			return REFOP_SYSERROR;
 	}
 
-	//Handle memory allocate
-	hndl = (struct refop_halndle*)malloc(sizeof(struct refop_halndle));
+	// Handle memory allocate
+	hndl = (struct refop_halndle *) malloc(sizeof(struct refop_halndle));
 	if (hndl == NULL)
 		return REFOP_SYSERROR;
 	memset(hndl, 0, sizeof(struct refop_halndle));
 
-	//Create file path
-	dirlen = strnlen(directry,PATH_MAX);
-	filelen = strnlen(filename,PATH_MAX);
-	if ((dirlen + filelen + 10 + 1) > PATH_MAX || (dirlen == 0) || (filelen == 0)) { //file suffix = max 10 byte, / = max 1 byte
+	// Create file path
+	dirlen = strnlen(directry, PATH_MAX);
+	filelen = strnlen(filename, PATH_MAX);
+	if ((dirlen + filelen + 10 + 1) > PATH_MAX || (dirlen == 0) ||
+	    (filelen == 0)) { // file suffix = max 10 byte, / = max 1 byte
 		// Path error
 		free(hndl);
 		return REFOP_ARGERROR;
 	}
 
 	// string length was checked, safe.
-	(void)strncpy(hndl->latestfile, directry, PATH_MAX);
-	if (hndl->latestfile[dirlen-1] != '/')
-		(void)strcat(hndl->latestfile, "/");
+	(void) strncpy(hndl->latestfile, directry, PATH_MAX);
+	if (hndl->latestfile[dirlen - 1] != '/')
+		(void) strcat(hndl->latestfile, "/");
 
-	(void)strncpy(hndl->basedir, hndl->latestfile, PATH_MAX);
+	(void) strncpy(hndl->basedir, hndl->latestfile, PATH_MAX);
 
-	(void)strcat(hndl->latestfile, filename);
+	(void) strcat(hndl->latestfile, filename);
 
-	(void)strncpy(hndl->backupfile1, hndl->latestfile, PATH_MAX);
-	(void)strcat(hndl->backupfile1, c_bk1_suffix);
+	(void) strncpy(hndl->backupfile1, hndl->latestfile, PATH_MAX);
+	(void) strcat(hndl->backupfile1, c_bk1_suffix);
 
-	(void)strncpy(hndl->newfile, hndl->latestfile, PATH_MAX);
-	(void)strcat(hndl->newfile, c_new_suffix);
+	(void) strncpy(hndl->newfile, hndl->latestfile, PATH_MAX);
+	(void) strcat(hndl->newfile, c_new_suffix);
 
 	(*handle) = hndl;
 
@@ -100,7 +101,7 @@ refop_error_t refop_release_redundancy_handle(refop_handle_t handle)
 {
 	if (handle == NULL)
 		return REFOP_ARGERROR;
-	
+
 	free(handle);
 
 	return REFOP_SUCCESS;
@@ -120,7 +121,7 @@ refop_error_t refop_release_redundancy_handle(refop_handle_t handle)
  */
 refop_error_t refop_set_redundancy_data(refop_handle_t handle, uint8_t *data, int64_t datasize)
 {
-	struct refop_halndle *hndl = (struct refop_halndle *)handle;
+	struct refop_halndle *hndl = (struct refop_halndle *) handle;
 	int ret = -1;
 
 	if (handle == NULL || data == NULL || datasize < 0)
@@ -136,7 +137,7 @@ refop_error_t refop_set_redundancy_data(refop_handle_t handle, uint8_t *data, in
 
 	ret = refop_file_rotation(handle);
 	if (ret < 0) {
-		(void)unlink(hndl->newfile);
+		(void) unlink(hndl->newfile);
 		return REFOP_SYSERROR;
 	}
 
@@ -178,7 +179,7 @@ refop_error_t refop_get_redundancy_data(refop_handle_t handle, uint8_t *data, in
 		result = REFOP_BROAKEN;
 	else
 		result = REFOP_SYSERROR;
-	
+
 	return result;
 }
 
@@ -194,7 +195,7 @@ refop_error_t refop_get_redundancy_data(refop_handle_t handle, uint8_t *data, in
  */
 refop_error_t refop_remove_redundancy_data(refop_handle_t handle)
 {
-	struct refop_halndle *hndl = (struct refop_halndle *)handle;
+	struct refop_halndle *hndl = (struct refop_halndle *) handle;
 	refop_error_t errorret = REFOP_SUCCESS;
 	int ret = -1;
 

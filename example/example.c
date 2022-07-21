@@ -13,9 +13,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-//int mkdir(const char *pathname, mode_t mode);
-
 const char filedir[] = "/tmp/refop-test/";
 const char filename[] = "refop-example.bin";
 

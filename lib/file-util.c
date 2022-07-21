@@ -6,9 +6,9 @@
  */
 #include "file-util.h"
 
+#include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <errno.h>
 
 /**
  * INTR safe read
@@ -16,11 +16,11 @@
  */
 ssize_t safe_read(int fd, void *buf, size_t count)
 {
-	ssize_t size = 0,ressize = 0;
+	ssize_t size = 0, ressize = 0;
 	size_t reqsize = 0;
 	uint8_t *pbuf = NULL;
 
-	pbuf = (uint8_t*)buf;
+	pbuf = (uint8_t *) buf;
 	reqsize = count;
 
 	do {
@@ -36,7 +36,7 @@ ssize_t safe_read(int fd, void *buf, size_t count)
 
 		pbuf += size;
 		ressize += size;
-	} while((ressize < reqsize) && (size != 0));
+	} while ((ressize < reqsize) && (size != 0));
 
 	return ressize;
 }
@@ -47,11 +47,11 @@ ssize_t safe_read(int fd, void *buf, size_t count)
  */
 ssize_t safe_write(int fd, void *buf, size_t count)
 {
-	ssize_t size = 0,ressize = 0;
+	ssize_t size = 0, ressize = 0;
 	size_t reqsize = 0;
 	uint8_t *pbuf = NULL;
 
-	pbuf = (uint8_t*)buf;
+	pbuf = (uint8_t *) buf;
 	reqsize = count;
 
 	do {
@@ -67,7 +67,7 @@ ssize_t safe_write(int fd, void *buf, size_t count)
 
 		pbuf += size;
 		ressize += size;
-	} while((ressize < reqsize) && (size != 0));
+	} while ((ressize < reqsize) && (size != 0));
 
 	return ressize;
 }

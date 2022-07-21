@@ -4,21 +4,21 @@
  * @file	fileop.c
  * @brief	file operation functions
  */
-#include "librefop.h"
 #include "fileop.h"
-#include "file-util.h"
-#include "static-configurator.h"
 #include "crc16.h"
+#include "file-util.h"
+#include "librefop.h"
+#include "static-configurator.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 
 int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufsize, int64_t *readsize);
@@ -27,18 +27,20 @@ int refop_header_validation(const s_refop_file_header *head);
 int refop_file_test(const char *filename);
 
 /**
- * Redundancy data write.
+ * This function create new datafile with header.
  *
- * @param [in]	event	sd event loop handle
+ * @param [in]	handle	Refop handle.
+ * @param [in]	data	Porinter to write data
+ * @param [in]	bufsize	Write dara size
  *
- * @return refop_error_t
+ * @return int
  * @retval 0 Succeeded.
  * @retval -1 Abnormal fail. Shall not continue.
  * @retval -2 Lager than size limit.
  */
 int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 {
-	struct refop_halndle *hndl = (struct refop_halndle *)handle;
+	struct refop_halndle *hndl = (struct refop_halndle *) handle;
 	int ret = -1, fd = -1;
 	ssize_t wsize = 0;
 	uint8_t *pbuf = NULL, *pdata = NULL;
@@ -48,7 +50,7 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 	if (bufsize > refop_get_config_data_size_limit() || bufsize <= 0)
 		return -2;
 
-	// Fource remove new file - success and noent is ok.
+	// Fource remove new file - success and noent are both ok.
 	ret = unlink(hndl->newfile);
 	if (ret < 0) {
 		if (errno != ENOENT)
@@ -56,7 +58,7 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 	}
 
 	// Create write buffer. To reduce sync write operation
-	pbuf = (uint8_t*)malloc(bufsize + sizeof(s_refop_file_header));
+	pbuf = (uint8_t *) malloc(bufsize + sizeof(s_refop_file_header));
 	if (pbuf == NULL)
 		return -1;
 
@@ -65,7 +67,7 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 	memcpy(pdata, data, bufsize);
 	crc16value = crc16(0xffff, pdata, bufsize);
 
-	refop_header_create((s_refop_file_header*)pbuf, crc16value, bufsize);
+	refop_header_create((s_refop_file_header *) pbuf, crc16value, bufsize);
 
 	fd = open(hndl->newfile, (O_CLOEXEC | O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW), (S_IRUSR | S_IWUSR));
 	if (fd < 0) {
@@ -76,14 +78,14 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 
 	wsize = safe_write(fd, pbuf, bufsize + sizeof(s_refop_file_header));
 	if (wsize < 0) {
-		(void)close(fd);
+		(void) close(fd);
 		free(pbuf);
 		return -1;
 	}
 
 	// sync and close
-	(void)fsync(fd);
-	(void)close(fd);
+	(void) fsync(fd);
+	(void) close(fd);
 	free(pbuf);
 
 	return 0;
@@ -91,21 +93,22 @@ int refop_new_file_write(refop_handle_t handle, uint8_t *data, int64_t bufsize)
 
 
 /**
- * Redundancy data write.
+ * This function is implemented file rotation algorithm.
+ * The detail of file rotation algorithm describe in README file.
  *
- * @param [in]	event	sd event loop handle
+ * @param [in]	handle	Refop handle.
  *
- * @return refop_error_t
+ * @return int
  * @retval 0 Succeeded.
  * @retval -1 Abnormal fail. Shall not continue.
  */
 int refop_file_rotation(refop_handle_t handle)
 {
-	struct refop_halndle *hndl = (struct refop_halndle *)handle;
+	struct refop_halndle *hndl = (struct refop_halndle *) handle;
 	int latest_state = -1, backup_state = -1;
 	int fd = -1;
 
-	//Get all file state
+	// Get all file state
 	latest_state = refop_file_test(hndl->latestfile);
 	backup_state = refop_file_test(hndl->backupfile1);
 
@@ -124,47 +127,48 @@ int refop_file_rotation(refop_handle_t handle)
 	if (latest_state == 0) {
 		// a1 or a2
 		if (backup_state == 0) {
-			//a1
-			(void)unlink(hndl->backupfile1);
-			(void)rename(hndl->latestfile, hndl->backupfile1);
-			(void)rename(hndl->newfile, hndl->latestfile);
+			// a1
+			(void) unlink(hndl->backupfile1);
+			(void) rename(hndl->latestfile, hndl->backupfile1);
+			(void) rename(hndl->newfile, hndl->latestfile);
 		} else {
-			//a2
+			// a2
 			// nop (void)unlink(hndl->backupfile1);
-			(void)rename(hndl->latestfile, hndl->backupfile1);
-			(void)rename(hndl->newfile, hndl->latestfile);
+			(void) rename(hndl->latestfile, hndl->backupfile1);
+			(void) rename(hndl->newfile, hndl->latestfile);
 		}
 	} else {
-		//a3 or a4
+		// a3 or a4
 		if (backup_state == 0) {
-			//a3
+			// a3
 			// nop (void)unlink(hndl->backupfile1);
 			// nop (void)rename(hndl->latestfile, hndl->backupfile1);
-			(void)rename(hndl->newfile, hndl->latestfile);
+			(void) rename(hndl->newfile, hndl->latestfile);
 		} else {
-			//a4
+			// a4
 			// nop (void)unlink(hndl->backupfile1);
 			// nop (void)rename(hndl->latestfile, hndl->backupfile1);
-			(void)rename(hndl->newfile, hndl->latestfile);
+			(void) rename(hndl->newfile, hndl->latestfile);
 		}
 	}
 
 	// directry sync
 	fd = open(hndl->basedir, (O_CLOEXEC | O_DIRECTORY | O_NOFOLLOW));
 	if (fd >= 0) {
-		(void)fsync(fd);
-		(void)close(fd);
+		(void) fsync(fd);
+		(void) close(fd);
 	}
 
 	return 0;
 }
 
 /**
- * Redundancy data write.
+ * This function is implemented file pick up algorithm that is including validation.
+ * The detail of file rotation algorithm describe in README file.
  *
- * @param [in]	event	sd event loop handle
+ * @param [in]	handle	Refop handle.
  *
- * @return refop_error_t
+ * @return int
  * @retval 0 Succeeded.
  * @retval 1 Succeeded with recover.
  * @retval -1 Abnormal fail. Shall not continue.
@@ -173,7 +177,7 @@ int refop_file_rotation(refop_handle_t handle)
  */
 int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int64_t *readsize)
 {
-	struct refop_halndle *hndl = (struct refop_halndle *)handle;
+	struct refop_halndle *hndl = (struct refop_halndle *) handle;
 	int ret1 = -1, ret2 = -1;
 	int64_t ressize = 0;
 
@@ -185,7 +189,7 @@ int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int
 		return 0;
 	} else if (ret1 < -1) {
 		// latest file was broken, file remove
-		(void)unlink(hndl->latestfile);
+		(void) unlink(hndl->latestfile);
 	}
 
 	ret2 = refop_file_get_with_validation(hndl->backupfile1, data, bufsize, &ressize);
@@ -195,19 +199,19 @@ int refop_file_pickup(refop_handle_t handle, uint8_t *data, int64_t bufsize, int
 		return 1;
 	} else if (ret2 < -1) {
 		// backup file was broken, file remove
-		(void)unlink(hndl->latestfile);
+		(void) unlink(hndl->latestfile);
 	}
 
 	if (ret1 == -1 && ret2 == -1)
-		return -2;
+		return -2; // No data
 
-	return -3;
+	return -3; // Broken data
 }
 
 /**
- * Target file status check
+ * Confirmation of existence of target file.
  *
- * @param [in]	filename	Target file path
+ * @param [in]	filename	Target file name with path.
  *
  * @return int
  * @retval 0 Target file is available.
@@ -219,7 +223,7 @@ int refop_file_test(const char *filename)
 	struct stat sb;
 	int ret = -1;
 
-	//Check a directry
+	// Check a directry
 	ret = stat(filename, &sb);
 	if (ret < 0) {
 		if (errno == ENOENT)
@@ -232,9 +236,13 @@ int refop_file_test(const char *filename)
 }
 
 /**
- * Redundancy data write.
+ * File read function with validation.
+ * File validation use invert value verification and data verification using crc16.
  *
- * @param [in]	event	sd event loop handle
+ * @param [in]	file	File name with path.
+ * @param [in]	data	Read data buffer
+ * @param [in]	bufsize	Buffer size for read data buffer (bytes).
+ * @param [in]	readsize	Readed size
  *
  * @return int
  * @retval  0 succeeded.
@@ -247,29 +255,29 @@ int refop_file_test(const char *filename)
  */
 int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufsize, int64_t *readsize)
 {
-	s_refop_file_header head = {0};
+	s_refop_file_header head = { 0 };
 	uint8_t *pbuf = NULL, *pmalloc = NULL;
 	uint16_t crc16value = 0;
 	ssize_t size = 0;
-	int result = -1,ret = -1;
+	int result = -1, ret = -1;
 	int fd = -1;
 
 	fd = open(file, (O_CLOEXEC | O_RDONLY | O_NOFOLLOW));
 	if (fd < 0) {
 		if (errno == ENOENT)
 			ret = -1;
-		else 
+		else
 			ret = -6;
 
 		goto invalid;
 	}
-	
+
 	size = safe_read(fd, &head, sizeof(head));
 	if (size != sizeof(head)) {
 		ret = -2;
 		goto invalid;
 	}
-	
+
 	result = refop_header_validation(&head);
 	if (result != 0) {
 		ret = -3;
@@ -278,7 +286,7 @@ int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufs
 
 	if (head.size > bufsize) {
 		if (head.size <= refop_get_config_data_size_limit()) {
-			pmalloc = (uint8_t*)malloc(head.size);
+			pmalloc = (uint8_t *) malloc(head.size);
 			pbuf = pmalloc;
 		} else {
 			ret = -4;
@@ -288,7 +296,7 @@ int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufs
 		pbuf = data;
 	}
 
-	size = safe_read(fd, pbuf, (size_t)head.size);
+	size = safe_read(fd, pbuf, (size_t) head.size);
 	if (size != head.size) {
 		ret = -2;
 		goto invalid;
@@ -308,23 +316,23 @@ int refop_file_get_with_validation(const char *file, uint8_t *data, int64_t bufs
 	} else
 		(*readsize) = head.size;
 
-	(void)close(fd);
+	(void) close(fd);
 
 	return 0;
 
 invalid:
-	free(pmalloc);	//free is NULL safe
-	
+	free(pmalloc); // free is NULL safe
+
 	if (fd >= 0)
-		(void)close(fd);
+		(void) close(fd);
 
 	return ret;
 }
 
 /**
- * The refop header create
+ * The refop header create from args.
  *
- * @param [in]	head	The memory of file header.
+ * @param [in]	head	Pointer for file header.
  * @param [in]	crc16value	The crc value of data block.
  * @param [in]	sizevalue	The size of data block.
  */
@@ -345,7 +353,7 @@ void refop_header_create(s_refop_file_header *head, uint16_t crc16value, uint64_
 /**
  * The refop header validation
  *
- * @param [in]	head The memory of file header.
+ * @param [in]	head	Pointer for file header.
  *
  * @return int
  * @retval  0 succeeded.
@@ -355,24 +363,27 @@ int refop_header_validation(const s_refop_file_header *head)
 {
 	int ret = -1;
 
-	//magic check
-	if (head->magic != (uint32_t)REFOP_FILE_HEADER_MAGIC)
+	// magic check
+	if (head->magic != (uint32_t) REFOP_FILE_HEADER_MAGIC)
 		goto invalid;
 
+	// header format version check
 	if (head->version == (uint32_t)(~head->version_inv)) {
 		if (head->version != REFOP_FILE_HEADER_VERSION_V1)
 			goto invalid;
-	} else 
+	} else
 		goto invalid;
 
+	// crc16 value check
 	if (head->crc16 != (uint16_t)(~head->crc16_inv))
 		goto invalid;
 
+	// data size check
 	if (head->size != (uint64_t)(~head->size_inv))
 		goto invalid;
 
 	ret = 0;
-	
+
 invalid:
 	return ret;
 }
