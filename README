@@ -4,7 +4,18 @@ Redundancy file operation library is a another implementation for the backup
 manager of AGL base system.  It aim to tiny implementation.
 
 
-File operation algorithm
+Configure option :
+  --enable-address-sanitizer
+    Enable address sanitizer in build time (for debug, default is no)
+
+  --enable-gcov
+    Enable gcov in build time (for debug, default is no)
+
+  --enable-test
+    Enable unit test build (requir to gtest and gmock, default is no)
+
+
+File operation algorithm :
 
 New data write - case 1..
 
