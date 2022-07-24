@@ -19,9 +19,11 @@ const char c_bk1_suffix[] = ".bk1";
 const char c_new_suffix[] = ".tmp";
 
 /**
- * Handle create function of refop.
+ * The refop handle create function.
+ * When you use refop, you shall call this function initially.
+ * The refop handle need to create per one file.
  *
- * @param [out]	handle	Created refophandle
+ * @param [out]	handle	Created refop handle
  * @param [in]	directry	Terget directry
  * @param [in]	filename	Target file name.
  *
@@ -89,7 +91,8 @@ refop_error_t refop_create_redundancy_handle(refop_handle_t *handle, const char 
 	return REFOP_SUCCESS;
 }
 /**
- * Handle release function of refop.
+ * The refop handle release function.
+ * When you completed refop operation, you shall call this release function to release allocated memory.
  *
  * @param [in]	handle	Refop handle
  *
@@ -109,6 +112,11 @@ refop_error_t refop_release_redundancy_handle(refop_handle_t handle)
 
 /**
  * The data set function of refop.
+ * When you want to write file, you call this function.
+ * This function is not support partial and append write,only to support all overwrite for file.
+ * If you write new data smaller than existing data, new data file truncated to new data file size.
+ * This function is not support multi threaded set and get with same handle.
+ * In case of multi threaded set and get using separate handle, these operation is support.
  *
  * @param [in]	handle	Refop handle
  * @param [in]	data	Write data for set data.
@@ -145,6 +153,12 @@ refop_error_t refop_set_redundancy_data(refop_handle_t handle, uint8_t *data, in
 }
 /**
  * The data get function of refop.
+ * When you want to read file, you call this function.
+ * When you set data size that smaller than existing file, this function read requested data size.
+ * When you set data size that larger than existing file, this function read existing file data size.
+ * How many data was reading, this function set to getsize.
+ * This function is not support multi threaded set and get with same handle.
+ * In case of multi threaded set and get using separate handle, these operation is support.
  *
  * @param [in]	handle	Refop handle
  * @param [in]	data	Read buffer for get data.

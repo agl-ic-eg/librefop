@@ -12,7 +12,7 @@
 
 /**
  * INTR safe read
- * Interface spec is similar to read.
+ * Interface spec is similar to read system call.
  */
 ssize_t safe_read(int fd, void *buf, size_t count)
 {
@@ -43,7 +43,7 @@ ssize_t safe_read(int fd, void *buf, size_t count)
 
 /**
  * INTR safe write
- * Interface spec is similar to read.
+ * Interface spec is similar to write system call.
  */
 ssize_t safe_write(int fd, void *buf, size_t count)
 {
