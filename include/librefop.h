@@ -30,7 +30,7 @@ typedef enum refop_error {
 	REFOP_NOENT = -1,
 
 	//! This operation was failed. Because all recovery method was failed.
-	REFOP_BROAKEN = -2,
+	REFOP_BROKEN = -2,
 
 	//! Argument error.
 	REFOP_ARGERROR = -3,

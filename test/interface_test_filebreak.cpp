@@ -140,7 +140,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_rotate)
 	iret = breakfile_header_magic(latestfile);
 	ASSERT_EQ(0, ret);
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	memset(pbuf,0xa4,sz);
 	ret = refop_set_redundancy_data(handle, pbuf, sz);
@@ -193,7 +193,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	//--------------------------------------------------------------------------------------------------------
 	// version break
@@ -205,7 +205,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// version_inv break
 	memset(pbuf,0,sz);
@@ -216,7 +216,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// version val break
 	memset(pbuf,0,sz);
@@ -227,7 +227,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	//--------------------------------------------------------------------------------------------------------
 	// crc16 break
@@ -239,7 +239,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// crc16_inv break
 	memset(pbuf,0,sz);
@@ -250,7 +250,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// crc16 val break
 	memset(pbuf,0,sz);
@@ -261,7 +261,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	//--------------------------------------------------------------------------------------------------------
 	// size break
@@ -273,7 +273,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// size inv break
 	memset(pbuf,0,sz);
@@ -284,7 +284,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// size val break 1
 	memset(pbuf,0,sz);
@@ -295,7 +295,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	// size val break 2
 	memset(pbuf,0,sz);
@@ -306,7 +306,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_file_break_all)
 	ASSERT_EQ(0, ret);
 
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	ret = refop_release_redundancy_handle(handle);
 	ASSERT_EQ(REFOP_SUCCESS, ret);
@@ -720,7 +720,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_break_file_f4)
 
 	// f4
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	ret = refop_remove_redundancy_data(handle);
 	ASSERT_EQ(REFOP_SUCCESS, ret);
@@ -780,7 +780,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_del_and_break_file_f2)
 
 	// f2
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	ret = refop_remove_redundancy_data(handle);
 	ASSERT_EQ(REFOP_SUCCESS, ret);
@@ -840,7 +840,7 @@ TEST_F(interface_test_filebreak, interface_test_filebreak_del_and_break_file_f3)
 
 	// f3
 	ret = refop_get_redundancy_data(handle, prbuf, sz, &szr);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	ret = refop_remove_redundancy_data(handle);
 	ASSERT_EQ(REFOP_SUCCESS, ret);

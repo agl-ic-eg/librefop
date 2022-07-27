@@ -33,13 +33,13 @@ TEST_F(fileop_test_utils, fileop_test_utils_refop_header_validation__invalid_hea
 	s_refop_file_header *head = &header;
 	int ret = -1;
 
-	// broaken magic
+	// broken magic
 	refop_header_create(head, 0x1234, 64*1024*1024);
 	head->magic = 0;
 	ret = refop_header_validation(head);
 	ASSERT_EQ(-1, ret);
 
-	// broaken version
+	// broken version
 	refop_header_create(head, 0x1234, 64*1024*1024);
 	head->version = 0x88888888;
 	head->version_inv = 0x88888888;
@@ -53,14 +53,14 @@ TEST_F(fileop_test_utils, fileop_test_utils_refop_header_validation__invalid_hea
 	ret = refop_header_validation(head);
 	ASSERT_EQ(-1, ret);
 
-	// broaken crc
+	// broken crc
 	refop_header_create(head, 0x1234, 64*1024*1024);
 	head->crc16 = 0x8888;
 	head->crc16_inv = 0x8888;
 	ret = refop_header_validation(head);
 	ASSERT_EQ(-1, ret);
 
-	// broaken size
+	// broken size
 	refop_header_create(head, 0x1234, 64*1024*1024);
 	head->size_inv = head->size;
 	ret = refop_header_validation(head);

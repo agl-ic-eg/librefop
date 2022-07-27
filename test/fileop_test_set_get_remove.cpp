@@ -203,11 +203,11 @@ TEST_F(fileop_test_set_get_remove_test, unit_test_refop_get_redundancy_data__ref
 	 * @retval 1 Succeeded with recover.
 	 * @retval -1 Abnormal fail. Shall not continue.
 	 * @retval -2 No data.
-	 * @retval -3 Broaken data.
+	 * @retval -3 Broken data.
 	 */
 	g_refop_file_pickup_ret = -3;
 	ret = refop_get_redundancy_data(handle, dmybuf, 100, &getsize);
-	ASSERT_EQ(REFOP_BROAKEN, ret);
+	ASSERT_EQ(REFOP_BROKEN, ret);
 
 	g_refop_file_pickup_ret = -2;
 	ret = refop_get_redundancy_data(handle, dmybuf, 100, &getsize);

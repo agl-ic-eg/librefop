@@ -114,14 +114,7 @@ New data write - case 2.
 |  file  |        |  file  |  
  --------          --------   
 
-2-5. Remove oldest backup file.
-
- --------          --------   
-|  New   |        | backup |  
-|  file  |        |  file  |  
- --------          --------   
-
-2-6. Done.
+2-5. Done.
 
 
 Recovery from abnormal conditions.
@@ -179,7 +172,7 @@ ac5. Latest file and new file.
  --------                      
     p1                         
 
-Return data from a new file.  Typically new file may not completed write operation.
+Return data from a latest file.  Typically new file may not completed write operation.
 
 
 ac6. Backup file and new file.

@@ -169,7 +169,7 @@ refop_error_t refop_set_redundancy_data(refop_handle_t handle, uint8_t *data, in
  * @retval REFOP_SUCCESS This operation was succeeded.
  * @retval REFOP_RECOVER This operation was succeeded within recovery.
  * @retval REFOP_NOENT The target file/directroy was nothing.
- * @retval REFOP_BROAKEN This operation was failed. Because all recovery method was failed.
+ * @retval REFOP_BROKEN This operation was failed. Because all recovery method was failed.
  * @retval REFOP_ARGERROR Argument error.
  * @retval REFOP_SYSERROR Internal operation was failed such as no memory, no disk space and etc.
  */
@@ -190,7 +190,7 @@ refop_error_t refop_get_redundancy_data(refop_handle_t handle, uint8_t *data, in
 	else if (ret == -2)
 		result = REFOP_NOENT;
 	else if (ret == -3)
-		result = REFOP_BROAKEN;
+		result = REFOP_BROKEN;
 	else
 		result = REFOP_SYSERROR;
 
